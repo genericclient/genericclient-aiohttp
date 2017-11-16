@@ -1,10 +1,11 @@
-from aiohttp.test_utils import AioHTTPTestCase
+from unittest import TestCase
+
 from aiohttp import web
 
 from genericclient_aiohttp import GenericClient
 
 
-class RequestClientTestCase(AioHTTPTestCase):
+class RequestClientTestCase(TestCase):
     async def get_application(self):
         return web.Application()
 
