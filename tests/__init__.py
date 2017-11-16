@@ -56,11 +56,14 @@ class RouteManager(object):
 
 
 class MockRoutesTestCase(AioHTTPTestCase):
-    async def setUpAsync(self):
-        await super(MockRoutesTestCase, self).setUpAsync()
+    def setUp(self):
+        super(MockRoutesTestCase, self).setUp()
         self.routes = defaultdict(list)
         server_url = "http://{}:{}".format(self.server.host, self.server.port)
-        self.generic_client = await self.setUpGenericClient(server_url, self.client.session)
+        self.generic_client = self.setUpGenericClient(server_url, self.client.session)
+
+    def setUpGenericClient(self, server_url, session):
+        return GenericClient(url=server_url, session=self.client.session)
 
     async def route(self, request):
         method = request.method
@@ -83,9 +86,6 @@ class MockRoutesTestCase(AioHTTPTestCase):
         app = web.Application()
         app.router.add_route('*', '/{path_info:.*}', self.route)
         return app
-
-    async def setUpGenericClient(self, server_url, session):
-        return await GenericClient(url=server_url, session=self.client.session)
 
     def mock_response(self, *args, **kwargs):
         return RouteManager(self, *args, **kwargs)

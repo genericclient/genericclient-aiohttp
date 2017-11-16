@@ -7,8 +7,8 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class ResourceTestCase(MockRoutesTestCase):
-    async def setUpGenericClient(self, server_url, session):
-        return await GenericClient(
+    def setUpGenericClient(self, server_url, session):
+        return GenericClient(
             url=server_url,
             session=self.client.session,
             trailing_slash=True,

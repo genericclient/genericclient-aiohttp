@@ -1,6 +1,5 @@
 from aiohttp.test_utils import unittest_run_loop
 
-
 from . import MockRoutesTestCase
 
 

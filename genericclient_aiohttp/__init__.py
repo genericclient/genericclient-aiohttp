@@ -56,6 +56,8 @@ class Endpoint(BaseEndpoint):
             return response
 
     async def request(self, method, *args, **kwargs):
+        if self.api.ainit is False:
+            await self.api.__ainit__()
         response = await self.http_request(self.api.session, method, *args, **kwargs)
         return response
 
@@ -129,21 +131,27 @@ class Endpoint(BaseEndpoint):
         return None
 
 
-class _GenericClient(BaseGenericClient):
+class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
+    ainit = False
 
     def set_session(self, session, auth):
         self._session = session
         self._auth = auth
 
+    async def __ainit__(self):
+        await self.aset_session()
+        self.ainit = True
+        return self
+
     async def aset_session(self):
-        client_kwargs = {
-            'auth': self._auth,
-            'headers': {
-                'Content-Type': 'application/json',
-            }
-        }
         if self._session is None:
+            client_kwargs = {
+                'auth': self._auth,
+                'headers': {
+                    'Content-Type': 'application/json',
+                }
+            }
             async with aiohttp.ClientSession(**client_kwargs) as session:
                 self.session = session
         else:
@@ -162,8 +170,3 @@ class _GenericClient(BaseGenericClient):
                     text,
                 ),
             )
-
-
-async def GenericClient(url, auth=None, session=None, trailing_slash=False):
-    client = _GenericClient(url, auth=auth, session=session, trailing_slash=trailing_slash)
-    return await client.aset_session()

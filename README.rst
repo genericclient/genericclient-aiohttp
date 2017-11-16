@@ -25,7 +25,7 @@ Quickstart
     from genericclient_aiohttp import GenericClient
 
     async def main():
-        myclient = await GenericClient(api_url)
+        myclient = GenericClient(api_url)
 
         myresource = await myclient.resources.get(id=1)
 
@@ -42,7 +42,7 @@ Instantiation
 
 ::
 
-    myclient = await GenericClient(url, auth=None, session=None, trailing_slash=False)
+    myclient = GenericClient(url, auth=None, session=None, trailing_slash=False)
 
 
 Arguments:
