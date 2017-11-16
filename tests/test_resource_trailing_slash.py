@@ -7,10 +7,10 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class ResourceTestCase(MockRoutesTestCase):
-    def setUpGenericClient(self, server_url, session):
+    def setUpGenericClient(self, url, session):
         return GenericClient(
-            url=server_url,
-            session=self.client.session,
+            url=url,
+            session=session,
             trailing_slash=True,
         )
 

@@ -34,6 +34,7 @@ setup(
     ],
     test_suite='tests',
     tests_require=[
+        "testing-aiohttp>=0.0.3",
         "coveralls",
     ]
 )

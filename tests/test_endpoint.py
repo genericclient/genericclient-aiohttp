@@ -104,7 +104,7 @@ class EndpointTestCase(MockRoutesTestCase):
                     await self.generic_client.users.get(group='watchers')
 
             with self.mock_response() as rsps:
-                rsps.add('get', '/users', body='[]')
+                rsps.add('get', '/users', data=[])
 
                 with self.assertRaises(self.generic_client.ResourceNotFound):
                     await self.generic_client.users.get(group='cookie_monster')

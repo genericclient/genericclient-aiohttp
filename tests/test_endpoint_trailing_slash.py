@@ -7,10 +7,10 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class EndpointTestCase(MockRoutesTestCase):
-    def setUpGenericClient(self, server_url, session):
+    def setUpGenericClient(self, url, session):
         return GenericClient(
-            url=server_url,
-            session=self.client.session,
+            url=url,
+            session=session,
             trailing_slash=True,
         )
 
@@ -95,7 +95,7 @@ class EndpointTestCase(MockRoutesTestCase):
                     await self.generic_client.users.get(group='watchers')
 
             with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', body='[]')
+                rsps.add('GET', '/users/', data=[])
 
                 with self.assertRaises(self.generic_client.ResourceNotFound):
                     await self.generic_client.users.get(group='cookie_monster')
