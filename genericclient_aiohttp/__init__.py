@@ -5,6 +5,10 @@ from . import routes
 import aiohttp
 
 
+_version = "0.0.1"
+__version__ = VERSION = tuple(map(int, _version.split('.')))
+
+
 class Resource(BaseResource):
     async def save(self):
         if self.pk is not None:
