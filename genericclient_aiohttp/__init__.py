@@ -5,7 +5,7 @@ from . import routes
 import aiohttp
 
 
-_version = "0.0.3"
+_version = "0.0.4"
 __version__ = VERSION = tuple(map(int, _version.split('.')))
 
 
