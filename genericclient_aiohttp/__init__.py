@@ -9,6 +9,18 @@ _version = "0.0.5"
 __version__ = VERSION = tuple(map(int, _version.split('.')))
 
 
+def convert_lookup(lookup):
+    items = lookup.items()
+    multi_dict = []
+    for k, v in items:
+        if isinstance(v, (tuple, list)):
+            for item in v:
+                multi_dict.append((k, item))
+        else:
+            multi_dict.append((k, v))
+    return multi_dict
+
+
 class Resource(BaseResource):
     async def save(self):
         if self.pk is not None:
@@ -43,6 +55,9 @@ class Endpoint(BaseEndpoint):
     def status_code(self, response):
         return response.status
 
+    def convert_lookup(self, lookup):
+        return convert_lookup(lookup)
+
     async def http_request(self, client, method, *args, **kwargs):
         async with client.request(method, *args, **kwargs) as response:
             if self.status_code(response) == 403:
@@ -62,7 +77,8 @@ class Endpoint(BaseEndpoint):
         return response
 
     async def filter(self, **kwargs):
-        response = await self.request('get', self.url, params=kwargs)
+        params = self.convert_lookup(kwargs)
+        response = await self.request('get', self.url, params=params)
         results = await self.api.hydrate_json(response)
         return [self.resource_class(self, **result) for result in results]
 
@@ -76,7 +92,8 @@ class Endpoint(BaseEndpoint):
             response = await self.request('get', url)
         except exceptions.UnknownPK:
             url = self.url
-            response = await self.request('get', url, params=kwargs)
+            params = self.convert_lookup(kwargs)
+            response = await self.request('get', url, params=params)
 
         if self.status_code(response) == 404:
             raise exceptions.ResourceNotFound("No `{}` found for {}".format(self.name, kwargs))

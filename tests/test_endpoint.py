@@ -48,6 +48,23 @@ class EndpointTestCase(MockRoutesTestCase):
             users = await self.generic_client.users.filter(group="watchers")
             self.assertEqual(len(users), 2)
 
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users?group__in=watchers&group__in=contributors', data=[
+                {
+                    'id': 1,
+                    'username': 'user1',
+                    'group': 'watchers',
+                },
+                {
+                    'id': 2,
+                    'username': 'user2',
+                    'group': 'contributors',
+                },
+            ], match_querystring=True)
+
+            users = await self.generic_client.users.filter(group__in=["watchers", "contributors"])
+            self.assertEqual(len(users), 2)
+
     @unittest_run_loop
     async def test_endpoint_get_id(self):
         with self.mock_response() as rsps:
