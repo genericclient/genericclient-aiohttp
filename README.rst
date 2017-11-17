@@ -165,6 +165,13 @@ server returns a `400` error, a ``PATCH`` request will be re-issued::
     # <- server returns 400
     # -> PATCH /posts/345/
 
+ResourceSets
+------------
+
+Whenever a method returns a list of Resources, they list will be wrapped in a ``ResultSet``.
+
+A ResultSet is a just a ``list`` object, with the addition of a ``.response`` containing the original response from the server.
+
 Routes
 ------
 

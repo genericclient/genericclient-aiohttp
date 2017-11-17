@@ -1,6 +1,9 @@
-from genericclient_base import BaseEndpoint, BaseGenericClient, BaseResource, exceptions, utils
+from genericclient_base import (
+    BaseEndpoint, BaseGenericClient, BaseResource, exceptions, utils,
+)
 
 from . import routes
+from .links import parse_response_links
 
 import aiohttp
 
@@ -74,13 +77,14 @@ class Endpoint(BaseEndpoint):
         if self.api.ainit is False:
             await self.api.__ainit__()
         response = await self.http_request(self.api.session, method, *args, **kwargs)
+        response.links = parse_response_links(response)
         return response
 
     async def filter(self, **kwargs):
         params = self.convert_lookup(kwargs)
         response = await self.request('get', self.url, params=params)
         results = await self.api.hydrate_json(response)
-        return [self.resource_class(self, **result) for result in results]
+        return self.resource_set_class(response, [self.resource_class(self, **result) for result in results])
 
     async def all(self):
         return await self.filter()

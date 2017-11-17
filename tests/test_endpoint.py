@@ -154,3 +154,28 @@ class EndpointTestCase(MockRoutesTestCase):
 
                 admin = await self.generic_client.users.get(role='admin')
                 self.assertEqual(admin.username, 'user3')
+
+    @unittest_run_loop
+    async def test_endpoint_links(self):
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users?page=2', data=[
+                {
+                    'id': 3,
+                    'username': 'user1',
+                    'group': 'watchers',
+                },
+                {
+                    'id': 4,
+                    'username': 'user2',
+                    'group': 'watchers',
+                },
+            ], headers={
+                'Link': '<http://example.com/users?page=3>; rel=next,<http://example.com/users?page=1>; rel=previous'
+            }, match_querystring=True)
+
+            users = await self.generic_client.users.filter(page=2)
+
+        self.assertEqual(users.response.links, {
+            'next': {'url': 'http://example.com/users?page=3', 'rel': 'next'},
+            'previous': {'url': 'http://example.com/users?page=1', 'rel': 'previous'}
+        })
