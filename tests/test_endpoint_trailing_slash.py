@@ -59,21 +59,55 @@ class EndpointTestCase(MockRoutesTestCase):
 
     @unittest_run_loop
     async def test_endpoint_get_id(self):
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/2/', data={
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users/2/', data={
+                'id': 2,
+                'username': 'user2',
+                'group': 'watchers',
+            })
+
+            user2 = await self.generic_client.users.get(id=2)
+            self.assertEqual(user2.username, 'user2')
+
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users/9999/', status=404)
+
+            with self.assertRaises(self.generic_client.ResourceNotFound):
+                await self.generic_client.users.get(id=9999)
+
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users/?group__in=watchers&group__in=contributors', data=[
+                {
+                    'id': 1,
+                    'username': 'user1',
+                    'group': 'watchers',
+                },
+                {
                     'id': 2,
                     'username': 'user2',
+                    'group': 'contributors',
+                },
+            ], match_querystring=True)
+
+            users = await self.generic_client.users.filter(group__in=["watchers", "contributors"])
+            self.assertEqual(len(users), 2)
+
+        with self.mock_response() as rsps:
+            rsps.add('GET', '/users/?id__in=1&id__in=2', data=[
+                {
+                    'id': 1,
+                    'username': 'user1',
                     'group': 'watchers',
-                })
+                },
+                {
+                    'id': 2,
+                    'username': 'user2',
+                    'group': 'contributors',
+                },
+            ], match_querystring=True)
 
-                user2 = await self.generic_client.users.get(id=2)
-                self.assertEqual(user2.username, 'user2')
-
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/9999/', status=404)
-
-                with self.assertRaises(self.generic_client.ResourceNotFound):
-                    await self.generic_client.users.get(id=9999)
+            users = await self.generic_client.users.filter(id__in=[1, 2])
+            self.assertEqual(len(users), 2)
 
     @unittest_run_loop
     async def test_endpoint_get_params(self):

@@ -15,9 +15,9 @@ def convert_lookup(lookup):
     for k, v in items:
         if isinstance(v, (tuple, list)):
             for item in v:
-                multi_dict.append((k, item))
+                multi_dict.append((k, str(item)))
         else:
-            multi_dict.append((k, v))
+            multi_dict.append((k, str(v)))
     return multi_dict
 
 
