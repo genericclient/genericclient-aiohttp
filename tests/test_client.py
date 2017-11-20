@@ -1,13 +1,9 @@
 from unittest import TestCase
 
-from aiohttp import web
-
 from genericclient_aiohttp import GenericClient
 
 
 class RequestClientTestCase(TestCase):
-    async def get_application(self):
-        return web.Application()
 
     def test_host(self):
         client = GenericClient(url='http://dummy.org')

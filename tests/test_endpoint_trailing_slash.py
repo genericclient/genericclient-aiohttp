@@ -1,5 +1,7 @@
 from aiohttp.test_utils import unittest_run_loop
 
+from test_aiohttp import RouteManager
+
 from genericclient_aiohttp import GenericClient
 
 from . import MockRoutesTestCase
@@ -7,17 +9,16 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class EndpointTestCase(MockRoutesTestCase):
-    def setUpGenericClient(self, url, session):
+    def setUpGenericClient(self, url):
         return GenericClient(
             url=url,
-            session=session,
             trailing_slash=True,
         )
 
     @unittest_run_loop
     async def test_endpoint_all(self):
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', data=[
+            with RouteManager() as rsps:
+                rsps.add('GET', self.API_URL + '/users/', json=[
                     {
                         'id': 1,
                         'username': 'user1',
@@ -40,8 +41,8 @@ class EndpointTestCase(MockRoutesTestCase):
 
     @unittest_run_loop
     async def test_endpoint_filter(self):
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', data=[
+            with RouteManager() as rsps:
+                rsps.add('GET', self.API_URL + '/users/', json=[
                     {
                         'id': 1,
                         'username': 'user1',
@@ -59,24 +60,16 @@ class EndpointTestCase(MockRoutesTestCase):
 
     @unittest_run_loop
     async def test_endpoint_get_id(self):
-        with self.mock_response() as rsps:
-            rsps.add('GET', '/users/2/', data={
+        with RouteManager() as rsps:
+            rsps.add('GET', self.API_URL + '/users/2/', json={
                 'id': 2,
                 'username': 'user2',
                 'group': 'watchers',
             })
 
-            user2 = await self.generic_client.users.get(id=2)
-            self.assertEqual(user2.username, 'user2')
+            rsps.add('GET', self.API_URL + '/users/9999/', status=404)
 
-        with self.mock_response() as rsps:
-            rsps.add('GET', '/users/9999/', status=404)
-
-            with self.assertRaises(self.generic_client.ResourceNotFound):
-                await self.generic_client.users.get(id=9999)
-
-        with self.mock_response() as rsps:
-            rsps.add('GET', '/users/?group__in=watchers&group__in=contributors', data=[
+            rsps.add('GET', self.API_URL + '/users/?group__in=watchers&group__in=contributors', json=[
                 {
                     'id': 1,
                     'username': 'user1',
@@ -89,11 +82,18 @@ class EndpointTestCase(MockRoutesTestCase):
                 },
             ], match_querystring=True)
 
-            users = await self.generic_client.users.filter(group__in=["watchers", "contributors"])
-            self.assertEqual(len(users), 2)
+            async with self.generic_client as session:
+                user2 = await session.users.get(id=2)
+                self.assertEqual(user2.username, 'user2')
 
-        with self.mock_response() as rsps:
-            rsps.add('GET', '/users/?id__in=1&id__in=2', data=[
+                users = await session.users.filter(group__in=["watchers", "contributors"])
+                self.assertEqual(len(users), 2)
+
+                with self.assertRaises(self.generic_client.ResourceNotFound):
+                    await session.users.get(id=9999)
+
+        with RouteManager() as rsps:
+            rsps.add('GET', self.API_URL + '/users/?id__in=1&id__in=2', json=[
                 {
                     'id': 1,
                     'username': 'user1',
@@ -111,8 +111,8 @@ class EndpointTestCase(MockRoutesTestCase):
 
     @unittest_run_loop
     async def test_endpoint_get_params(self):
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', data=[
+            with RouteManager() as rsps:
+                rsps.add('GET', self.API_URL + '/users/', json=[
                     {
                         'id': 1,
                         'username': 'user1',
@@ -128,14 +128,14 @@ class EndpointTestCase(MockRoutesTestCase):
                 with self.assertRaises(self.generic_client.MultipleResourcesFound):
                     await self.generic_client.users.get(group='watchers')
 
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', data=[])
+            with RouteManager() as rsps:
+                rsps.add('GET', self.API_URL + '/users/', json=[])
 
                 with self.assertRaises(self.generic_client.ResourceNotFound):
                     await self.generic_client.users.get(group='cookie_monster')
 
-            with self.mock_response() as rsps:
-                rsps.add('GET', '/users/', data=[
+            with RouteManager() as rsps:
+                rsps.add('GET', self.API_URL + '/users/', json=[
                     {
                         'id': 3,
                         'username': 'user3',
@@ -148,8 +148,8 @@ class EndpointTestCase(MockRoutesTestCase):
 
     @unittest_run_loop
     async def test_endpoint_links(self):
-        with self.mock_response() as rsps:
-            rsps.add('GET', '/users/?page=2', data=[
+        with RouteManager() as rsps:
+            rsps.add('GET', self.API_URL + '/users/?page=2', json=[
                 {
                     'id': 3,
                     'username': 'user1',

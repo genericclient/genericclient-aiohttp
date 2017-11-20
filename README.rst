@@ -31,6 +31,12 @@ Quickstart
 
         actives = await myclient.posts.filter(active=True)
 
+        # or you can make multiple HTTP sharing the same session
+        async with myclient as session:
+            myresource = await session.resources.get(id=1)
+            actives = await session.posts.filter(active=True)
+
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(loop))
 

@@ -61,8 +61,8 @@ class Endpoint(BaseEndpoint):
     def convert_lookup(self, lookup):
         return convert_lookup(lookup)
 
-    async def http_request(self, client, method, *args, **kwargs):
-        async with client.request(method, *args, **kwargs) as response:
+    async def http_request(self, session, method, *args, **kwargs):
+        async with session.request(method, *args, **kwargs) as response:
             if self.status_code(response) == 403:
                 raise exceptions.NotAuthenticatedError(response, "Cannot authenticate user `{}` on the API".format(self.api.session.auth.login))
             elif self.status_code(response) == 400:
@@ -74,8 +74,8 @@ class Endpoint(BaseEndpoint):
             return response
 
     async def request(self, method, *args, **kwargs):
-        if self.api.ainit is False:
-            await self.api.__ainit__()
+        if self.api.session is None:
+            await self.api.aset_session()
         response = await self.http_request(self.api.session, method, *args, **kwargs)
         response.links = parse_response_links(response)
         return response
@@ -154,30 +154,25 @@ class Endpoint(BaseEndpoint):
 
 class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
-    ainit = False
 
     def set_session(self, session, auth):
         self._session = session
         self._auth = auth
 
-    async def __ainit__(self):
-        await self.aset_session()
-        self.ainit = True
+    def _make_session(self):
+        return aiohttp.ClientSession(auth=self._auth, headers={'Content-Type': 'application/json'})
+
+    async def __aenter__(self):
+        session = self._make_session()
+        self.session = session
         return self
 
+    async def __aexit__(self, *args, **kwargs):
+        await self.session.__aexit__(*args, **kwargs)
+
     async def aset_session(self):
-        if self._session is None:
-            client_kwargs = {
-                'auth': self._auth,
-                'headers': {
-                    'Content-Type': 'application/json',
-                }
-            }
-            async with aiohttp.ClientSession(**client_kwargs) as session:
-                self.session = session
-        else:
-            self.session = self._session
-        return self
+        async with self._make_session() as session:
+            self.session = session
 
     async def hydrate_json(self, response):
         try:
