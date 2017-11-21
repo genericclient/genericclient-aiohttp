@@ -64,7 +64,9 @@ class Endpoint(BaseEndpoint):
     async def http_request(self, session, method, *args, **kwargs):
         async with session.request(method, *args, **kwargs) as response:
             if self.status_code(response) == 403:
-                raise exceptions.NotAuthenticatedError(response, "Cannot authenticate user `{}` on the API".format(self.api.session.auth.login))
+                raise exceptions.NotAuthenticatedError(response, "Cannot authenticate user `{}` on the API".format(
+                    self.api.auth.login
+                ))
             elif self.status_code(response) == 400:
                 text = await response.text()
                 raise exceptions.BadRequestError(
@@ -156,8 +158,11 @@ class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
 
     def set_session(self, session, auth):
-        self._session = session
-        self._auth = auth
+        if auth is not None and not isinstance(auth, aiohttp.BasicAuth):
+            auth = aiohttp.BasicAuth(*auth)
+        if session is not None and not session.closed:
+            self.session = session
+        self.auth = auth
 
     def _make_session(self):
         return aiohttp.ClientSession(auth=self._auth, headers={'Content-Type': 'application/json'})
