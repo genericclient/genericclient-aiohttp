@@ -76,9 +76,11 @@ class Endpoint(BaseEndpoint):
             return response
 
     async def request(self, method, *args, **kwargs):
-        if self.api.session is None:
-            await self.api.aset_session()
-        response = await self.http_request(self.api.session, method, *args, **kwargs)
+        if self.api.session is not None:
+            response = await self.http_request(self.api.session, method, *args, **kwargs)
+        else:
+            async with self.api.make_session() as session:
+                response = await self.http_request(session, method, *args, **kwargs)
         response.links = parse_response_links(response)
         return response
 
@@ -160,24 +162,22 @@ class GenericClient(BaseGenericClient):
     def set_session(self, session, auth):
         if auth is not None and not isinstance(auth, aiohttp.BasicAuth):
             auth = aiohttp.BasicAuth(*auth)
-        if session is not None and not session.closed:
-            self.session = session
+        self.session = None
         self.auth = auth
 
-    def _make_session(self):
-        return aiohttp.ClientSession(auth=self._auth, headers={'Content-Type': 'application/json'})
+    def make_session(self):
+        return aiohttp.ClientSession(auth=self.auth, headers={
+            'Content-Type': 'application/json',
+        })
 
     async def __aenter__(self):
-        session = self._make_session()
+        session = self.make_session()
         self.session = session
         return self
 
     async def __aexit__(self, *args, **kwargs):
         await self.session.__aexit__(*args, **kwargs)
-
-    async def aset_session(self):
-        async with self._make_session() as session:
-            self.session = session
+        self.session = None
 
     async def hydrate_json(self, response):
         try:
