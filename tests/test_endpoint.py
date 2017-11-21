@@ -1,6 +1,3 @@
-from aiohttp.test_utils import unittest_run_loop
-from genericclient_aiohttp import GenericClient
-
 from test_aiohttp import RouteManager
 
 from . import MockRoutesTestCase
@@ -8,7 +5,6 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class EndpointTestCase(MockRoutesTestCase):
-    @unittest_run_loop
     async def test_endpoint_all(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users', json=[
@@ -33,7 +29,6 @@ class EndpointTestCase(MockRoutesTestCase):
                 users = await session.users.all()
                 self.assertEqual(len(users), 3)
 
-    @unittest_run_loop
     async def test_endpoint_filter(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users', json=[
@@ -49,7 +44,8 @@ class EndpointTestCase(MockRoutesTestCase):
                 },
             ])
 
-            users = await self.generic_client.users.filter(group="watchers")
+            async with self.generic_client as session:
+                users = await session.users.filter(group="watchers")
             self.assertEqual(len(users), 2)
 
         with RouteManager() as rsps:
@@ -66,7 +62,8 @@ class EndpointTestCase(MockRoutesTestCase):
                 },
             ], match_querystring=True)
 
-            users = await self.generic_client.users.filter(group__in=["watchers", "contributors"])
+            async with self.generic_client as session:
+                users = await session.users.filter(group__in=["watchers", "contributors"])
             self.assertEqual(len(users), 2)
 
         with RouteManager() as rsps:
@@ -86,7 +83,6 @@ class EndpointTestCase(MockRoutesTestCase):
             users = await self.generic_client.users.filter(id__in=[1, 2])
             self.assertEqual(len(users), 2)
 
-    @unittest_run_loop
     async def test_endpoint_get_id(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/2', json={
@@ -103,7 +99,6 @@ class EndpointTestCase(MockRoutesTestCase):
                 with self.assertRaises(self.generic_client.ResourceNotFound):
                     await session.users.get(id=9999)
 
-    @unittest_run_loop
     async def test_endpoint_get_uuid(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/2', json={
@@ -121,7 +116,6 @@ class EndpointTestCase(MockRoutesTestCase):
             with self.assertRaises(self.generic_client.ResourceNotFound):
                 await self.generic_client.users.get(uuid=9999)
 
-    @unittest_run_loop
     async def test_endpoint_get_params(self):
             with RouteManager() as rsps:
                 rsps.add('GET', self.API_URL + '/users', json=[
@@ -158,7 +152,6 @@ class EndpointTestCase(MockRoutesTestCase):
                 admin = await self.generic_client.users.get(role='admin')
                 self.assertEqual(admin.username, 'user3')
 
-    @unittest_run_loop
     async def test_endpoint_links(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users?page=2', json=[

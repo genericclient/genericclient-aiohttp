@@ -1,5 +1,3 @@
-from aiohttp.test_utils import unittest_run_loop
-
 from test_aiohttp import RouteManager
 
 from . import MockRoutesTestCase
@@ -7,7 +5,6 @@ from . import MockRoutesTestCase
 
 # Create your tests here.
 class ResourceTestCase(MockRoutesTestCase):
-    @unittest_run_loop
     async def test_resource_delete(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/1', json={
@@ -24,7 +21,6 @@ class ResourceTestCase(MockRoutesTestCase):
 
             await user1.delete()
 
-    @unittest_run_loop
     async def test_resource_delete_uuid(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/1', json={
@@ -41,7 +37,6 @@ class ResourceTestCase(MockRoutesTestCase):
 
             await user1.delete()
 
-    @unittest_run_loop
     async def test_resource_save(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/1', json={
@@ -63,7 +58,6 @@ class ResourceTestCase(MockRoutesTestCase):
             user1.group = 'admins'
             await user1.save()
 
-    @unittest_run_loop
     async def test_resource_save_uuid(self):
         with RouteManager() as rsps:
             rsps.add('GET', self.API_URL + '/users/1', json={

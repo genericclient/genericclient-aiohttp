@@ -34,7 +34,8 @@ setup(
     ],
     test_suite='tests',
     tests_require=[
-        "testing-aiohttp>=0.0.6",
+        "testing-aiohttp>=0.0.7",
+        "asynctest",
         "coveralls",
     ]
 )

@@ -1,5 +1,3 @@
-from aiohttp.test_utils import unittest_run_loop
-
 from test_aiohttp import RouteManager
 
 from . import MockRoutesTestCase
@@ -11,7 +9,6 @@ async def request_callback(request):
 
 class EndpointTestCase(MockRoutesTestCase):
 
-    @unittest_run_loop
     async def test_endpoint_detail_route(self):
         with RouteManager() as rsps:
             rsps.add_callback(
@@ -33,7 +30,6 @@ class EndpointTestCase(MockRoutesTestCase):
             response = await self.generic_client.users(_method='get', id=2).notify(unread=3)
             self.assertEqual(await response.text(), 'ok')
 
-    @unittest_run_loop
     async def test_endpoint_list_route(self):
         with RouteManager() as rsps:
 

@@ -1,10 +1,9 @@
 from genericclient_aiohttp import GenericClient
 
+from asynctest import TestCase
 
-from test_aiohttp import AioLoopTestCase
 
-
-class MockRoutesTestCase(AioLoopTestCase):
+class MockRoutesTestCase(TestCase):
     API_URL = 'http://example.org'
 
     def setUp(self):
