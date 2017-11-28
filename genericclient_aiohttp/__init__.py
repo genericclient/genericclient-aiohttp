@@ -61,12 +61,22 @@ class Endpoint(BaseEndpoint):
     def convert_lookup(self, lookup):
         return convert_lookup(lookup)
 
-    async def http_request(self, session, method, *args, **kwargs):
+    async def http_request(self, session, method, url, *args, **kwargs):
         async with session.request(method, *args, **kwargs) as response:
             if self.status_code(response) == 403:
-                raise exceptions.NotAuthenticatedError(response, "Cannot authenticate user `{}` on the API".format(
-                    self.api.auth.login
-                ))
+                if self.api.auth:
+                    msg = "Failed request to `{}`. Cannot authenticate user `{}` on the API.".format(
+                        url, self.api.auth.login,
+                    )
+                else:
+                    msg = "Failed request to `{}`. User is not authenticated.".format(
+                        url,
+                    )
+                    raise exceptions.NotAuthenticatedError(response, "User is not authenticated on the API")
+                raise exceptions.NotAuthenticatedError(
+                    response, msg,
+                )
+
             elif self.status_code(response) == 400:
                 text = await response.text()
                 raise exceptions.BadRequestError(
@@ -75,9 +85,9 @@ class Endpoint(BaseEndpoint):
                 )
             return response
 
-    async def request(self, method, *args, **kwargs):
+    async def request(self, method, url, *args, **kwargs):
         if self.api.session is not None:
-            response = await self.http_request(self.api.session, method, *args, **kwargs)
+            response = await self.http_request(self.api.session, method, url, *args, **kwargs)
         else:
             async with self.api.make_session() as session:
                 response = await self.http_request(session, method, *args, **kwargs)
