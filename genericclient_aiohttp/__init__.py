@@ -62,7 +62,7 @@ class Endpoint(BaseEndpoint):
         return convert_lookup(lookup)
 
     async def http_request(self, session, method, url, *args, **kwargs):
-        async with session.request(method, *args, **kwargs) as response:
+        async with session.request(method, url, *args, **kwargs) as response:
             if self.status_code(response) == 403:
                 if self.api.auth:
                     msg = "Failed request to `{}`. Cannot authenticate user `{}` on the API.".format(
@@ -90,7 +90,7 @@ class Endpoint(BaseEndpoint):
             response = await self.http_request(self.api.session, method, url, *args, **kwargs)
         else:
             async with self.api.make_session() as session:
-                response = await self.http_request(session, method, *args, **kwargs)
+                response = await self.http_request(session, method, url, *args, **kwargs)
         response.links = parse_response_links(response)
         return response
 
