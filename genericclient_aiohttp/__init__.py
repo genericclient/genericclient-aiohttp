@@ -8,7 +8,7 @@ from .links import parse_response_links
 import aiohttp
 
 
-_version = "0.0.9"
+_version = "0.0.10"
 __version__ = VERSION = tuple(map(int, _version.split('.')))
 
 
