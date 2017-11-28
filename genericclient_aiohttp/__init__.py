@@ -148,7 +148,8 @@ class Endpoint(BaseEndpoint):
 
     async def create_or_update(self, payload):
         if 'id' in payload or 'uuid' in payload:
-            return await self.resource_class(self, **payload).save()
+            resource = self.resource_class(self, **payload)
+            return await resource.save()
 
         return await self.create(payload)
 
