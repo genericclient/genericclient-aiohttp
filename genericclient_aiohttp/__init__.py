@@ -86,7 +86,7 @@ class Endpoint(BaseEndpoint):
             return response
 
     async def request(self, method, url, *args, **kwargs):
-        if self.api.session is not None:
+        if self.api.session is not None and not self.api.session.closed:
             response = await self.http_request(self.api.session, method, url, *args, **kwargs)
         else:
             async with self.api.make_session() as session:
@@ -187,8 +187,9 @@ class GenericClient(BaseGenericClient):
         return self
 
     async def __aexit__(self, *args, **kwargs):
-        await self.session.__aexit__(*args, **kwargs)
-        self.session = None
+        if self.session is not None:
+            await self.session.__aexit__(*args, **kwargs)
+            self.session = None
 
     async def hydrate_json(self, response):
         try:
