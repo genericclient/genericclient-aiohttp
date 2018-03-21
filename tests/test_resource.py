@@ -1,80 +1,86 @@
-from test_aiohttp import RouteManager
+import pytest
 
-from . import MockRoutesTestCase
+from mocket.plugins.httpretty import HTTPretty
+from mocket import Mocketizer
 
 
-# Create your tests here.
-class ResourceTestCase(MockRoutesTestCase):
-    async def test_resource_delete(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/1', json={
-                'id': 1,
-                'username': 'user1',
-                'group': 'watchers',
-            })
+@pytest.mark.asyncio
+async def test_resource_delete(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/1', json={
+            'id': 1,
+            'username': 'user1',
+            'group': 'watchers',
+        })
 
-            user1 = await self.generic_client.users.get(id=1)
-            self.assertEqual(user1.username, 'user1')
+        user1 = await generic_client.users.get(id=1)
+        assert user1.username == 'user1'
 
-        with RouteManager() as rsps:
-            rsps.add('DELETE', self.API_URL + '/users/1', status=204)
+    with Mocketizer():
+        register_json(HTTPretty.DELETE, '/users/1', status=204)
 
-            await user1.delete()
+        await user1.delete()
 
-    async def test_resource_delete_uuid(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/1', json={
-                'uuid': 1,
-                'username': 'user1',
-                'group': 'watchers',
-            })
 
-            user1 = await self.generic_client.users.get(uuid=1)
-            self.assertEqual(user1.username, 'user1')
+@pytest.mark.asyncio
+async def test_resource_delete_uuid(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/1', json={
+            'uuid': 1,
+            'username': 'user1',
+            'group': 'watchers',
+        })
 
-        with RouteManager() as rsps:
-            rsps.add('DELETE', self.API_URL + '/users/1', status=204)
+        user1 = await generic_client.users.get(uuid=1)
+        assert user1.username == 'user1'
 
-            await user1.delete()
+    with Mocketizer():
+        register_json(HTTPretty.DELETE, '/users/1', status=204)
 
-    async def test_resource_save(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/1', json={
-                'id': 1,
-                'username': 'user1',
-                'group': 'watchers',
-            })
+        await user1.delete()
 
-            user1 = await self.generic_client.users.get(id=1)
-            self.assertEqual(user1.username, 'user1')
 
-        with RouteManager() as rsps:
-            rsps.add('PUT', self.API_URL + '/users/1', json={
-                'id': 1,
-                'username': 'user1',
-                'group': 'admins',
-            })
+@pytest.mark.asyncio
+async def test_resource_save(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/1', json={
+            'id': 1,
+            'username': 'user1',
+            'group': 'watchers',
+        })
 
-            user1.group = 'admins'
-            await user1.save()
+        user1 = await generic_client.users.get(id=1)
+        assert user1.username == 'user1'
 
-    async def test_resource_save_uuid(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/1', json={
-                'uuid': 1,
-                'username': 'user1',
-                'group': 'watchers',
-            })
+    with Mocketizer():
+        register_json(HTTPretty.PUT, '/users/1', json={
+            'id': 1,
+            'username': 'user1',
+            'group': 'admins',
+        })
 
-            user1 = await self.generic_client.users.get(uuid=1)
-            self.assertEqual(user1.username, 'user1')
+        user1.group = 'admins'
+        await user1.save()
 
-        with RouteManager() as rsps:
-            rsps.add('PUT', self.API_URL + '/users/1', json={
-                'uuid': 1,
-                'username': 'user1',
-                'group': 'admins',
-            })
 
-            user1.group = 'admins'
-            await user1.save()
+@pytest.mark.asyncio
+async def test_resource_save_uuid(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/1', json={
+            'uuid': 1,
+            'username': 'user1',
+            'group': 'watchers',
+        })
+
+        user1 = await generic_client.users.get(uuid=1)
+        assert user1.username == 'user1'
+
+    with Mocketizer():
+        register_json(HTTPretty.PUT, '/users/1', json={
+            'uuid': 1,
+            'username': 'user1',
+            'group': 'admins',
+        })
+
+        user1.group = 'admins'
+        await user1.save()

@@ -1,70 +1,120 @@
-from test_aiohttp import RouteManager
+import pytest
+
+from mocket.plugins.httpretty import HTTPretty
+from mocket import Mocketizer
 
 from genericclient_aiohttp import GenericClient
 
-from . import MockRoutesTestCase
+
+@pytest.fixture
+def generic_client(api_url):
+    return GenericClient(
+        url=api_url,
+        trailing_slash=True,
+    )
 
 
-# Create your tests here.
-class EndpointTestCase(MockRoutesTestCase):
-    def setUpGenericClient(self, url):
-        return GenericClient(
-            url=url,
-            trailing_slash=True,
-        )
+@pytest.mark.asyncio
+async def test_endpoint_all(generic_client, register_json):
+        with Mocketizer():
+            register_json(HTTPretty.GET, '/users/', json=[
+                {
+                    'id': 1,
+                    'username': 'user1',
+                    'group': 'watchers',
+                },
+                {
+                    'id': 2,
+                    'username': 'user2',
+                    'group': 'watchers',
+                },
+                {
+                    'id': 3,
+                    'username': 'user3',
+                    'group': 'admin',
+                },
+            ])
 
-    async def test_endpoint_all(self):
-            with RouteManager() as rsps:
-                rsps.add('GET', self.API_URL + '/users/', json=[
-                    {
-                        'id': 1,
-                        'username': 'user1',
-                        'group': 'watchers',
-                    },
-                    {
-                        'id': 2,
-                        'username': 'user2',
-                        'group': 'watchers',
-                    },
-                    {
-                        'id': 3,
-                        'username': 'user3',
-                        'group': 'admin',
-                    },
-                ])
+            users = await generic_client.users.all()
+            assert len(users) == 3
 
-                users = await self.generic_client.users.all()
-                self.assertEqual(len(users), 3)
 
-    async def test_endpoint_filter(self):
-            with RouteManager() as rsps:
-                rsps.add('GET', self.API_URL + '/users/', json=[
-                    {
-                        'id': 1,
-                        'username': 'user1',
-                        'group': 'watchers',
-                    },
-                    {
-                        'id': 2,
-                        'username': 'user2',
-                        'group': 'watchers',
-                    },
-                ])
-
-                users = await self.generic_client.users.filter(group="watchers")
-                self.assertEqual(len(users), 2)
-
-    async def test_endpoint_get_id(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/2/', json={
+@pytest.mark.asyncio
+async def test_endpoint_filter(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/?group=watchers', json=[
+            {
+                'id': 1,
+                'username': 'user1',
+                'group': 'watchers',
+            },
+            {
                 'id': 2,
                 'username': 'user2',
                 'group': 'watchers',
-            })
+            },
+        ])
 
-            rsps.add('GET', self.API_URL + '/users/9999/', status=404)
+        users = await generic_client.users.filter(group="watchers")
+        assert len(users) == 2
 
-            rsps.add('GET', self.API_URL + '/users/?group__in=watchers&group__in=contributors', json=[
+
+@pytest.mark.asyncio
+async def test_endpoint_get_id(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/2/', json={
+            'id': 2,
+            'username': 'user2',
+            'group': 'watchers',
+        })
+
+        register_json(HTTPretty.GET, '/users/9999/', status=404)
+
+        register_json(HTTPretty.GET, '/users/?group__in=watchers&group__in=contributors', json=[
+            {
+                'id': 1,
+                'username': 'user1',
+                'group': 'watchers',
+            },
+            {
+                'id': 2,
+                'username': 'user2',
+                'group': 'contributors',
+            },
+        ])
+
+        async with generic_client as session:
+            user2 = await session.users.get(id=2)
+            assert user2.username == 'user2'
+
+            users = await session.users.filter(group__in=["watchers", "contributors"])
+            assert len(users) == 2
+
+            with pytest.raises(generic_client.ResourceNotFound):
+                await session.users.get(id=9999)
+
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/?id__in=1&id__in=2', json=[
+            {
+                'id': 1,
+                'username': 'user1',
+                'group': 'watchers',
+            },
+            {
+                'id': 2,
+                'username': 'user2',
+                'group': 'contributors',
+            },
+        ])
+
+        users = await generic_client.users.filter(id__in=[1, 2])
+        assert len(users) == 2
+
+
+@pytest.mark.asyncio
+async def test_endpoint_get_params(generic_client, register_json):
+        with Mocketizer():
+            register_json(HTTPretty.GET, '/users/?group=watchers', json=[
                 {
                     'id': 1,
                     'username': 'user1',
@@ -73,93 +123,51 @@ class EndpointTestCase(MockRoutesTestCase):
                 {
                     'id': 2,
                     'username': 'user2',
-                    'group': 'contributors',
-                },
-            ], match_querystring=True)
-
-            async with self.generic_client as session:
-                user2 = await session.users.get(id=2)
-                self.assertEqual(user2.username, 'user2')
-
-                users = await session.users.filter(group__in=["watchers", "contributors"])
-                self.assertEqual(len(users), 2)
-
-                with self.assertRaises(self.generic_client.ResourceNotFound):
-                    await session.users.get(id=9999)
-
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/?id__in=1&id__in=2', json=[
-                {
-                    'id': 1,
-                    'username': 'user1',
                     'group': 'watchers',
                 },
-                {
-                    'id': 2,
-                    'username': 'user2',
-                    'group': 'contributors',
-                },
-            ], match_querystring=True)
+            ])
 
-            users = await self.generic_client.users.filter(id__in=[1, 2])
-            self.assertEqual(len(users), 2)
+            with pytest.raises(generic_client.MultipleResourcesFound):
+                await generic_client.users.get(group='watchers')
 
-    async def test_endpoint_get_params(self):
-            with RouteManager() as rsps:
-                rsps.add('GET', self.API_URL + '/users/', json=[
-                    {
-                        'id': 1,
-                        'username': 'user1',
-                        'group': 'watchers',
-                    },
-                    {
-                        'id': 2,
-                        'username': 'user2',
-                        'group': 'watchers',
-                    },
-                ])
+        with Mocketizer():
+            register_json(HTTPretty.GET, '/users/?group=cookie_monster', json=[])
 
-                with self.assertRaises(self.generic_client.MultipleResourcesFound):
-                    await self.generic_client.users.get(group='watchers')
+            with pytest.raises(generic_client.ResourceNotFound):
+                await generic_client.users.get(group='cookie_monster')
 
-            with RouteManager() as rsps:
-                rsps.add('GET', self.API_URL + '/users/', json=[])
-
-                with self.assertRaises(self.generic_client.ResourceNotFound):
-                    await self.generic_client.users.get(group='cookie_monster')
-
-            with RouteManager() as rsps:
-                rsps.add('GET', self.API_URL + '/users/', json=[
-                    {
-                        'id': 3,
-                        'username': 'user3',
-                        'group': 'admin',
-                    },
-                ])
-
-                admin = await self.generic_client.users.get(role='admin')
-                self.assertEqual(admin.username, 'user3')
-
-    async def test_endpoint_links(self):
-        with RouteManager() as rsps:
-            rsps.add('GET', self.API_URL + '/users/?page=2', json=[
+        with Mocketizer():
+            register_json(HTTPretty.GET, '/users/?role=admin', json=[
                 {
                     'id': 3,
-                    'username': 'user1',
-                    'group': 'watchers',
+                    'username': 'user3',
+                    'group': 'admin',
                 },
-                {
-                    'id': 4,
-                    'username': 'user2',
-                    'group': 'watchers',
-                },
-            ], headers={
-                'Link': '<http://example.com/users/?page=3>; rel=next,<http://example.com/users/?page=1>; rel=previous'
-            }, match_querystring=True)
+            ])
 
-            users = await self.generic_client.users.filter(page=2)
+            admin = await generic_client.users.get(role='admin')
+            assert admin.username == 'user3'
 
-        self.assertEqual(users.response.links, {
-            'next': {'url': 'http://example.com/users/?page=3', 'rel': 'next'},
-            'previous': {'url': 'http://example.com/users/?page=1', 'rel': 'previous'}
-        })
+
+@pytest.mark.asyncio
+async def test_endpoint_links(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users/?page=2', json=[
+            {
+                'id': 3,
+                'username': 'user1',
+                'group': 'watchers',
+            },
+            {
+                'id': 4,
+                'username': 'user2',
+                'group': 'watchers',
+            },
+        ], link='<http://example.com/users/?page=3>; rel=next,<http://example.com/users/?page=1>; rel=previous')
+
+        users = await generic_client.users.filter(page=2)
+
+    assert users.response.links == {
+        'next': {'url': 'http://example.com/users/?page=3', 'rel': 'next'},
+        'previous': {'url': 'http://example.com/users/?page=1', 'rel': 'previous'}
+    }

@@ -1,53 +1,61 @@
-from test_aiohttp import RouteManager
+import pytest
 
-from . import MockRoutesTestCase
-
-
-async def request_callback(request):
-    return (200, {}, 'ok')
+from mocket.plugins.httpretty import HTTPretty
+from mocket import Mocketizer
 
 
-class EndpointTestCase(MockRoutesTestCase):
+@pytest.fixture
+def generic_response():
+    return {
+        'json': 'ok',
+    }
 
-    async def test_endpoint_detail_route(self):
-        with RouteManager() as rsps:
-            rsps.add_callback(
-                'POST', self.API_URL + '/users/2/notify',
-                callback=request_callback,
-                content_type='application/json',
-            )
 
-            response = await self.generic_client.users(id=2).notify(unread=3)
-            self.assertEqual(await response.text(), 'ok')
+@pytest.mark.asyncio
+async def test_endpoint_detail_route(generic_client, register_json, generic_response):
+    with Mocketizer():
+        register_json(
+            HTTPretty.POST,
+            '/users/2/notify',
+            **generic_response
+        )
 
-        with RouteManager() as rsps:
-            rsps.add_callback(
-                'GET', self.API_URL + '/users/2/notify',
-                callback=request_callback,
-                content_type='application/json',
-            )
+        response = await generic_client.users(id=2).notify(unread=3)
+        assert response.data == 'ok'
 
-            response = await self.generic_client.users(_method='get', id=2).notify(unread=3)
-            self.assertEqual(await response.text(), 'ok')
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET,
+            '/users/2/notify',
+            **generic_response
 
-    async def test_endpoint_list_route(self):
-        with RouteManager() as rsps:
+        )
 
-            rsps.add_callback(
-                'POST', self.API_URL + '/users/notify',
-                callback=request_callback,
-                content_type='application/json',
-            )
+        response = await generic_client.users(_method='get', id=2).notify(unread=3)
+        assert response.data == 'ok'
 
-            response = await self.generic_client.users().notify(unread=3)
-            self.assertEqual(await response.text(), 'ok')
 
-        with RouteManager() as rsps:
-            rsps.add_callback(
-                'GET', self.API_URL + '/users/notify',
-                callback=request_callback,
-                content_type='application/json',
-            )
+@pytest.mark.asyncio
+async def test_endpoint_list_route(generic_client, register_json, generic_response):
+    with Mocketizer():
 
-            response = await self.generic_client.users(_method='get').notify(unread=3)
-            self.assertEqual(await response.text(), 'ok')
+        register_json(
+            HTTPretty.POST,
+            '/users/notify',
+            **generic_response
+
+        )
+
+        response = await generic_client.users().notify(unread=3)
+        assert response.data == 'ok'
+
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET,
+            '/users/notify',
+            **generic_response
+
+        )
+
+        response = await generic_client.users(_method='get').notify(unread=3)
+        assert response.data == 'ok'

@@ -27,15 +27,20 @@ setup(
         'License :: OSI Approved :: MIT License',
     ],
     install_requires=[
-        "genericclient-base==0.0.4",
+        "genericclient-base==1.0.0",
         "aiodns>=1.1.1,<1.2",
-        "aiohttp>=2.3.2,<2.4",
+        "aiohttp>=3.1,<3.2",
         "cchardet==2.1.1,<2.2",
+        "pyfailsafe>=0.2.0,<0.2.1",
+    ],
+    setup_requires=[
+        'pytest-runner',
     ],
     test_suite='tests',
     tests_require=[
-        "testing-aiohttp>=0.0.7",
-        "asynctest",
         "coveralls",
+        "mocket",
+        "pytest",
+        "pytest-asyncio",
     ]
 )
