@@ -125,7 +125,7 @@ class Endpoint(BaseEndpoint):
         if response.status_code != 201:
             raise exceptions.HTTPError(response)
 
-        return self.resource_class(self, **result.data)
+        return self.resource_class(self, **response.data)
 
     async def get_or_create(self, **kwargs):
         defaults = kwargs.pop('defaults', {})
