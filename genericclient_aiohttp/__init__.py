@@ -35,7 +35,7 @@ class Resource(BaseResource):
             except exceptions.BadRequestError:
                 response = await self._endpoint.request('patch', url, json=self.payload)
         else:
-            response = await self._endpoint.request('post', url, json=self.payload)
+            response = await self._endpoint.request('post', self._endpoint.url, json=self.payload)
         self.payload = response.data
         return self
 
