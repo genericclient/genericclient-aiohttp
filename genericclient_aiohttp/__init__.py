@@ -7,7 +7,7 @@ from . import routes
 
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
-from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
+from failsafe import Failsafe, RetryPolicy, CircuitBreaker
 
 
 _version = "1.1.1"
@@ -84,12 +84,12 @@ class Endpoint(BaseEndpoint):
         return ParsedResponse(status_code=status, headers=headers, data=data)
 
     async def request(self, method, url, *args, **kwargs):
-        response = await self.http_request(method, url, *args, **kwargs)
+        response = await self.api.failsafe.run(lambda: self.http_request(method, url, *args, **kwargs))
         return response
 
     async def filter(self, **kwargs):
         params = self.convert_lookup(kwargs)
-        response = await self.api.failsafe.run(lambda: self.request('get', self.url, params=params))
+        response = await self.request('get', self.url, params=params)
         return self.resource_set_class(response, [self.resource_class(self, **result) for result in response.data])
 
     async def all(self):
@@ -161,11 +161,12 @@ class Endpoint(BaseEndpoint):
 class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
 
-    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=3):
+    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=6):
         if auth is not None and not isinstance(auth, aiohttp.BasicAuth):
             auth = aiohttp.BasicAuth(*auth)
         super(GenericClient, self).__init__(url, auth, session, trailing_slash)
-        circuit_breaker = CircuitBreaker(maximum_failures=retries)
+        max_failures = retries - 1
+        circuit_breaker = CircuitBreaker(maximum_failures=max_failures)
         retry_policy = RetryPolicy(
             allowed_retries=retries,
             retriable_exceptions=[ClientConnectionError],
