@@ -10,7 +10,7 @@ from aiohttp.client_exceptions import ClientConnectionError
 from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
 
 
-_version = "0.0.10"
+_version = "1.0.0"
 __version__ = VERSION = tuple(map(int, _version.split('.')))
 
 
