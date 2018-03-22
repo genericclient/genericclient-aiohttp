@@ -5,7 +5,7 @@ genericclient
 .. image:: https://travis-ci.org/genericclient/genericclient-aiohttp.svg?branch=master
     :target: https://travis-ci.org/genericclient/genericclient-aiohttp
 
-A generic client for RESTful APIs based on `aiohttp`. Python 3.5+ only.
+A generic client for RESTful APIs based on ``aiohttp``. Python 3.5+ only.
 
 
 Installation
@@ -198,7 +198,7 @@ Routes http calls use ``POST`` by default, but you can specify something else by
 
     await myclient.blogs(_method='get').visits()
 
-Note that instead of instances of ``genericclient_aiohttp.Resource``, this calls will return an instance of ``aiohttp.web.Response``.
+Note that this calls will return an instance of ``genericclient.ParsedResponse``, instead of instances of ``genericclient.Resource``,
 
 License
 =======
