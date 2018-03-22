@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
@@ -27,7 +27,7 @@ setup(
         'License :: OSI Approved :: MIT License',
     ],
     install_requires=[
-        "genericclient-base==1.0.0",
+        "genericclient-base==1.1.0",
         "aiodns>=1.1.1,<1.2",
         "aiohttp>=3.1,<3.2",
         "cchardet==2.1.1,<2.2",
