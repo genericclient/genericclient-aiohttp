@@ -28,10 +28,10 @@ setup(
     ],
     install_requires=[
         "genericclient-base==1.0.0",
-        "aiodns>=1.1.1,<1.2",
+        "aiodns>=1.1,<1.2",
         "aiohttp>=3.1,<3.2",
-        "cchardet==2.1.1,<2.2",
-        "pyfailsafe>=0.2.0,<0.2.1",
+        "cchardet==2.1,<2.2",
+        "pyfailsafe>=0.2,<0.3",
     ],
     setup_requires=[
         'pytest-runner',
