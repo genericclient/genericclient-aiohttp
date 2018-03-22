@@ -48,7 +48,7 @@ Instantiation
 
 ::
 
-    myclient = GenericClient(url, auth=None, session=None, trailing_slash=False)
+    myclient = GenericClient(url, auth=None, session=None, trailing_slash=False, retries=3)
 
 
 Arguments:
@@ -57,6 +57,7 @@ Arguments:
 * ``auth``: The auth for your API. You can pass anything that ``aiohttp.ClientSession`` can accept as auth.
 * ``session``: Pass a session instance to have ``aiohttp`` use that session. If ``None`` (the default), it will instantiate an instance of ``aiohttp.ClientSession`` for you.
 * ``trailing_slash``: You can set this to ``True`` if your API's URLs end with a ``/``
+* ``retries``: How many times should the client retry the http call after a ``ClientConnectionError``
 
 Endpoints
 ---------

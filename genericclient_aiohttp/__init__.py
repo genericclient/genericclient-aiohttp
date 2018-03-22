@@ -161,11 +161,11 @@ class Endpoint(BaseEndpoint):
 class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
 
-    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=3, max_failures=2):
+    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=3):
         if auth is not None and not isinstance(auth, aiohttp.BasicAuth):
             auth = aiohttp.BasicAuth(*auth)
         super(GenericClient, self).__init__(url, auth, session, trailing_slash)
-        circuit_breaker = CircuitBreaker(maximum_failures=max_failures)
+        circuit_breaker = CircuitBreaker(maximum_failures=retries)
         retry_policy = RetryPolicy(
             allowed_retries=retries,
             retriable_exceptions=[ClientConnectionError],
