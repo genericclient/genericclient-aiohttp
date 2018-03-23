@@ -1,3 +1,5 @@
+import logging
+
 from genericclient_base import (
     ParsedResponse,
     BaseEndpoint, BaseGenericClient, BaseResource, exceptions, utils,
@@ -12,6 +14,9 @@ from failsafe import Failsafe, RetryPolicy, CircuitBreaker
 
 _version = "1.1.4"
 __version__ = VERSION = tuple(map(int, _version.split('.')))
+
+
+logger = logging.getLogger(__name__)
 
 
 def convert_lookup(lookup):
@@ -187,6 +192,7 @@ class GenericClient(BaseGenericClient):
 
     def get_or_create_session(self):
         if self._session is None or self._session.closed:
+            logger.debug('Creating new session.')
             self._session = self.make_session()
         return self._session
 
