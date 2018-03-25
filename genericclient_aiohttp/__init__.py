@@ -181,6 +181,7 @@ class GenericClient(BaseGenericClient):
                 exceptions.ResourceNotFound,
                 exceptions.MultipleResourcesFound,
                 exceptions.HTTPError,
+                ValueError,
             ],
         )
         self.failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
