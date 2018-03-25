@@ -4,6 +4,9 @@ genericclient
 
 .. image:: https://travis-ci.org/genericclient/genericclient-aiohttp.svg?branch=master
     :target: https://travis-ci.org/genericclient/genericclient-aiohttp
+    
+.. image:: https://coveralls.io/repos/github/genericclient/genericclient-aiohttp/badge.svg?branch=master
+:target: https://coveralls.io/github/genericclient/genericclient-aiohttp?branch=master
 
 A generic client for RESTful APIs based on ``aiohttp``. Python 3.5+ only.
 
