@@ -32,3 +32,21 @@ async def test_invalid_data(generic_client, api_url):
 
         assert '[not json]' in str(excinfo.value)
 
+
+@pytest.mark.asyncio
+async def test_trailing_slash(api_url, register_json):
+    generic_client = GenericClient(url=api_url)
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET, '/users', json=[]
+        )
+        await generic_client.users.all()
+
+    generic_client = GenericClient(url=api_url, trailing_slash=True)
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET, '/users/', json=[]
+        )
+        await generic_client.users.all()
+
+
