@@ -51,7 +51,7 @@ Instantiation
 
 ::
 
-    myclient = GenericClient(url, auth=None, session=None, trailing_slash=False, retries=3)
+    myclient = GenericClient(url, auth=None, session=None, trailing_slash=False, retries=3, autopaginate=None)
 
 
 Arguments:
@@ -61,6 +61,7 @@ Arguments:
 * ``session``: Pass a session instance to have ``aiohttp`` use that session. If ``None`` (the default), it will instantiate an instance of ``aiohttp.ClientSession`` for you.
 * ``trailing_slash``: You can set this to ``True`` if your API's URLs end with a ``/``
 * ``retries``: How many times should the client retry the http call after a ``ClientConnectionError``
+* ``autopaginate``: You can set this to a coroutine to fetch all pages resulting from a request. Currently, the only coroutine included is ``genericclient_aiohttp.pagination.link_header``, which supports [RFC5988](https://tools.ietf.org/html/rfc5988).
 
 Endpoints
 ---------

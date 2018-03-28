@@ -94,8 +94,15 @@ class Endpoint(BaseEndpoint):
 
     async def filter(self, **kwargs):
         params = self.convert_lookup(kwargs)
-        response = await self.request('get', self.url, params=params)
-        return self.resource_set_class(response, [self.resource_class(self, **result) for result in response.data])
+        results = []
+        url = self.url
+        if self.api.autopaginate is not None:
+            response, results = await self.api.autopaginate(self, params)
+        else:
+            response = await self.request('get', url, params=params)
+            results += response.data
+
+        return self.resource_set_class(response, [self.resource_class(self, **result) for result in results])
 
     async def all(self):
         return await self.filter()
@@ -166,10 +173,10 @@ class Endpoint(BaseEndpoint):
 class GenericClient(BaseGenericClient):
     endpoint_class = Endpoint
 
-    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=6):
+    def __init__(self, url, auth=None, session=None, trailing_slash=False, retries=6, autopaginate=None):
         if auth is not None and not isinstance(auth, aiohttp.BasicAuth):
             auth = aiohttp.BasicAuth(*auth)
-        super(GenericClient, self).__init__(url, auth, session, trailing_slash)
+        super(GenericClient, self).__init__(url, auth, session, trailing_slash, autopaginate)
         max_failures = retries - 1
         circuit_breaker = CircuitBreaker(maximum_failures=max_failures)
         retry_policy = RetryPolicy(
