@@ -1,5 +1,7 @@
 import pytest
 
+from aiohttp import ServerDisconnectedError
+
 from mocket.plugins.httpretty import HTTPretty
 from mocket import Mocketizer
 
@@ -32,3 +34,28 @@ async def test_invalid_data(generic_client, api_url):
 
         assert '[not json]' in str(excinfo.value)
 
+
+@pytest.mark.asyncio
+async def test_trailing_slash(api_url, register_json):
+    generic_client = GenericClient(url=api_url)
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET, '/users', json=[]
+        )
+        await generic_client.users.all()
+
+    generic_client = GenericClient(url=api_url, trailing_slash=True)
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET, '/users/', json=[]
+        )
+        await generic_client.users.all()
+
+
+@pytest.mark.asyncio
+async def test_no_atexit_for_closed_sessions(api_url):
+    generic_client = GenericClient(url=api_url)
+
+    with pytest.raises(ServerDisconnectedError):
+        async with generic_client:
+            raise ServerDisconnectedError
