@@ -9,7 +9,12 @@ python:
   - "pypy3"
 install:
   - pip install coveralls
+env:
+  global:
+    - COVERALLS_PARALLEL=true
 script:
   - coverage run setup.py test
 after_success:
   - coveralls
+notifications:
+  webhooks: https://coveralls.io/webhook?repo_token=$COVERALLS_REPO_TOKEN
