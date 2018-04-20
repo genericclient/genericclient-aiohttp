@@ -50,3 +50,16 @@ async def test_trailing_slash(api_url, register_json):
         await generic_client.users.all()
 
 
+@pytest.mark.asyncio
+async def test_no_atexit_for_closed_sessions(api_url, register_json):
+    generic_client = GenericClient(url=api_url)
+    with Mocketizer():
+        register_json(
+            HTTPretty.GET, '/users', json=[]
+        )
+
+        async with generic_client as session:
+            await session.users.all()
+            session.close()
+
+
