@@ -1,5 +1,7 @@
 import pytest
 
+from aiohttp import ServerDisconnectedError
+
 from mocket.plugins.httpretty import HTTPretty
 from mocket import Mocketizer
 
@@ -51,15 +53,9 @@ async def test_trailing_slash(api_url, register_json):
 
 
 @pytest.mark.asyncio
-async def test_no_atexit_for_closed_sessions(api_url, register_json):
+async def test_no_atexit_for_closed_sessions(monkeypatch, api_url, register_json):
     generic_client = GenericClient(url=api_url)
-    with Mocketizer():
-        register_json(
-            HTTPretty.GET, '/users', json=[]
-        )
 
-        async with generic_client as session:
-            await session.users.all()
-            session.close()
-
-
+    with pytest.raises(ServerDisconnectedError):
+        async with generic_client:
+            raise ServerDisconnectedError

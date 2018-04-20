@@ -208,6 +208,7 @@ class GenericClient(BaseGenericClient):
         return self
 
     async def __aexit__(self, *args, **kwargs):
+        self.get_or_create_session()
         if self._session is not None and not self._session.closed:
             await self._session.__aexit__(*args, **kwargs)
 
