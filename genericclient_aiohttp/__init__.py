@@ -205,10 +205,12 @@ class GenericClient(BaseGenericClient):
         return self._session
 
     async def __aenter__(self):
+        self.get_or_create_session()
         return self
 
     async def __aexit__(self, *args, **kwargs):
-        await self._session.__aexit__(*args, **kwargs)
+        if self._session is not None and not self._session.closed:
+            await self._session.__aexit__(*args, **kwargs)
 
     async def hydrate_data(self, response):
         if response.status == 204:
