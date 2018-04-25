@@ -8,7 +8,7 @@ from genericclient_base import (
 from . import routes
 
 import aiohttp
-from aiohttp.client_exceptions import ClientConnectionError
+from aiohttp.client_exceptions import ClientConnectionError, ContentTypeError
 from failsafe import Failsafe, RetryPolicy, CircuitBreaker
 
 
@@ -218,7 +218,7 @@ class GenericClient(BaseGenericClient):
         try:
             result = await response.json()
             return result
-        except ValueError:
+        except (ValueError, ContentTypeError):
             text = await response.text()
             raise ValueError(
                 "Response from server is not valid JSON. Received {}: {}".format(
