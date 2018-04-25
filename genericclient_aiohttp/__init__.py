@@ -103,12 +103,12 @@ class Endpoint(BaseEndpoint):
     async def get(self, **kwargs):
         try:
             pk = utils.find_pk(kwargs)
+            params = None
             url = self._urljoin(pk)
-            response = await self.request('get', url)
         except exceptions.UnknownPK:
-            url = self.url
             params = self.convert_lookup(kwargs)
-            response = await self.request('get', url, params=params)
+            url = self.url
+        response = await self.request('get', url, params=params)
 
         if response.status_code == 404:
             raise exceptions.ResourceNotFound("No `{}` found for {}".format(self.name, kwargs))
