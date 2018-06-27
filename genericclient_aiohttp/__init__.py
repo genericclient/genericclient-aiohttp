@@ -63,33 +63,35 @@ class Endpoint(BaseEndpoint):
     def convert_lookup(self, lookup):
         return convert_lookup(lookup)
 
-    async def http_request(self, method, url, *args, **kwargs):
-        async with self.api.session as session:
-            async with session.request(method, url, *args, **kwargs) as response:
-                if response.status == 403:
-                    if self.api.auth:
-                        msg = "Failed request to `{}`. Cannot authenticate user `{}` on the API.".format(
-                            url, self.api.auth.login,
-                        )
-                        raise exceptions.NotAuthenticatedError(
-                            response, msg,
-                        )
-                    else:
-                        raise exceptions.NotAuthenticatedError(response, "User is not authenticated on the API")
-
-                elif response.status == 400:
-                    text = await response.text()
-                    raise exceptions.BadRequestError(
-                        response,
-                        "Bad Request 400: {}".format(text)
+    async def http_request(self, session, method, url, *args, **kwargs):
+        async with session.request(method, url, *args, **kwargs) as response:
+            if response.status == 403:
+                if self.api.auth:
+                    msg = "Failed request to `{}`. Cannot authenticate user `{}` on the API.".format(
+                        url, self.api.auth.login,
                     )
-                status = response.status
-                headers = response.headers
-                data = await self.api.hydrate_data(response)
+                    raise exceptions.NotAuthenticatedError(
+                        response, msg,
+                    )
+                else:
+                    raise exceptions.NotAuthenticatedError(response, "User is not authenticated on the API")
+
+            elif response.status == 400:
+                text = await response.text()
+                raise exceptions.BadRequestError(
+                    response,
+                    "Bad Request 400: {}".format(text)
+                )
+            status = response.status
+            headers = response.headers
+            data = await self.api.hydrate_data(response)
         return ParsedResponse(status_code=status, headers=headers, data=data)
 
     async def request(self, method, url, *args, **kwargs):
-        response = await self.api.failsafe.run(lambda: self.http_request(method, url, *args, **kwargs))
+        async with aiohttp.ClientSession(auth=self.api.auth, headers={
+            'Content-Type': 'application/json',
+        }) as session:
+            response = await self.api.failsafe.run(lambda: self.http_request(session, method, url, *args, **kwargs))
         return response
 
     async def filter(self, **kwargs):
@@ -186,23 +188,14 @@ class GenericClient(BaseGenericClient):
         )
         self.failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
 
-    def make_session(self):
-        return aiohttp.ClientSession(auth=self.auth, headers={
+    async def __aenter__(self):
+        self._session = aiohttp.ClientSession(auth=self.auth, headers={
             'Content-Type': 'application/json',
         })
-
-    def get_or_create_session(self):
-        if self._session is None or self._session.closed:
-            logger.debug('Creating new session.')
-            self._session = self.make_session()
-        return self._session
-
-    async def __aenter__(self):
-        self.get_or_create_session()
         return self
 
     async def __aexit__(self, *args, **kwargs):
-        if self._session is not None and not self._session.closed:
+        if not self._session.closed:
             await self._session.__aexit__(*args, **kwargs)
 
     async def hydrate_data(self, response):
