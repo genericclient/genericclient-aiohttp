@@ -27,7 +27,7 @@ setup(
         'License :: OSI Approved :: MIT License',
     ],
     install_requires=[
-        "genericclient-base==1.2.2",
+        "genericclient-base==1.2.3",
         "aiodns>=1.1,<1.2",
         "aiohttp>=3.1,<3.2",
         "cchardet==2.1,<2.2",
