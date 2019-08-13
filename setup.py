@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "genericclient-base==1.3.0",
         "aiodns>=1.1,<1.2",
-        "aiohttp>=3.1,<3.2",
+        "aiohttp>=3.5,<3.6",
         "cchardet==2.1,<2.2",
         "pyfailsafe>=0.2,<0.3",
     ],
