@@ -71,14 +71,18 @@ Endpoints are available as properties on the main instance.
 ``.all()``
 ~~~~~~~~~~
 
-Retrieves all resources (essentially a simple ``GET`` on the endpoint)::
+Retrieves all resources (essentially a simple ``GET`` on the endpoint):
+
+.. code:: python
 
     await myclient.posts.all()  # GET /posts/
 
 ``.filter()``
 ~~~~~~~~~~~~~
 
-``.filter(**kwargs)`` calls a ``GET`` with ``kwargs`` as querystring values::
+``.filter(**kwargs)`` calls a ``GET`` with ``kwargs`` as querystring values:
+
+.. code:: python
 
     await myclient.posts.filter(blog=12, status=1)  # GET /posts/?blog=12&status=1
 
