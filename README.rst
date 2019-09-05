@@ -66,7 +66,12 @@ Arguments:
 Endpoints
 ---------
 
-Endpoints are available as properties on the main instance.
+Endpoints are available as properties or items on the main instance:
+
+.. code:: python
+
+    await myclient.posts.all()  # GET /posts/
+    await myclient["active-users"].all()  # GET /active-users/
 
 ``.all()``
 ~~~~~~~~~~
