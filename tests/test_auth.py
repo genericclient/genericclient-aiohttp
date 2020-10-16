@@ -2,8 +2,16 @@ from mocket.plugins.httpretty import HTTPretty
 from mocket import Mocketizer
 import pytest
 
-
 from genericclient_aiohttp import GenericClient
+
+
+@pytest.mark.asyncio
+async def test_401(generic_client, register_json):
+    with Mocketizer():
+        register_json(HTTPretty.GET, '/users', status=401)
+        with pytest.raises(generic_client.NotAuthenticatedError):
+            async with generic_client as session:
+                await session.users.all()
 
 
 @pytest.mark.asyncio

@@ -65,7 +65,7 @@ class Endpoint(BaseEndpoint):
 
     async def http_request(self, session, method, url, *args, **kwargs):
         async with session.request(method, url, *args, **kwargs) as response:
-            if response.status == 403:
+            if response.status in (401, 403):
                 if self.api.auth:
                     msg = "Failed request to `{}`. Cannot authenticate user `{}` on the API.".format(
                         url, self.api.auth.login,
